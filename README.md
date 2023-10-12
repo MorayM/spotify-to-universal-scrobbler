@@ -19,5 +19,5 @@ Tested with Python 3.8 but should work with other versions.
 
 ## TODO
 
-- Make the output file size configurable
 - Run on a whole directory of JSON files as Spotify splits its exports by year.
+- Update the scrobble dates to be within the last 14 days

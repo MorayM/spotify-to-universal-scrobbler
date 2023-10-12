@@ -1,17 +1,23 @@
 import sys
 import csv
 import json
+import argparse
+
+parser = argparse.ArgumentParser(description='Process Spotify JSON exports for loading into Universal Scrobbler')
+parser.add_argument('-n', '--num', help='Number of rows to include in each output file', default=2800, type=int)
+parser.add_argument('-o', '--output', help='Output file name stem (will be output as <output_stem>-n.csv', default='output')
+parser.add_argument('input', help='Input file to process')
 
 DELIM = ","
-UPLOAD_LIMIT = 2800
 
 def chunk(l, n):
 	for i in range(0, len(l), n):
 		yield l[i:i + n]
 
 def main():
-	input_file_name = sys.argv[1]
-	output_file_name = sys.argv[2] if len(sys.argv) == 3 else "output.csv"
+	args = parser.parse_args()
+	input_file_name = args.input
+	output_file_name = args.output
 
 	input_file = open(input_file_name, "r", encoding="UTF8")
 	all_data = json.load(input_file)
@@ -33,10 +39,10 @@ def main():
 			all_rows.append(row)
 			rows_set.add(stringified_row)
 
-	file_chunks = list(chunk(all_rows, UPLOAD_LIMIT)) # chunk() returns a generator, not a list
+	file_chunks = list(chunk(all_rows, args.num)) # chunk() returns a generator, not a list
 
 	for i in range(0, len(file_chunks)):
-		with open(f"output-{i}.csv", "w") as output_file:
+		with open(f"{output_file_name}-{i}.csv", "w") as output_file:
 			writer = csv.writer(output_file)
 			writer.writerows(file_chunks[i])
 
