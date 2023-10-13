@@ -7,10 +7,11 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Process Spotify JSON exports for loading into Universal Scrobbler")
 parser.add_argument("-n", "--num", help="Number of rows to include in each output file", default=2400, type=int)
-parser.add_argument("-o", "--output", help="Output file name stem (will be output as <output_stem>-n.csv", default="output")
+parser.add_argument("-o", "--output", help="Directory to place output files", default=".")
 parser.add_argument("input", help="Path to directory with input files to process")
 
 DELIM = ","
+OUTPUT_FILE_NAME = "output"
 
 def chunk(l, n):
 	for i in range(0, len(l), n):
@@ -18,20 +19,21 @@ def chunk(l, n):
 
 def main():
 	args = parser.parse_args()
-	input_file_name = args.input
-	output_file_name = args.output
+	output_path = os.path.abspath(args.output)
 
 	if not os.path.isdir(args.input):
 		print("Provided path is not a directory")
 		exit()
 
+	if not os.path.exists(output_path):
+		os.makedirs(output_path)
+
 	input_files = glob.glob(os.path.join(os.path.abspath(args.input), "*.json"))
 
 	all_input_data = []
 	for file in input_files:
-		f = open(file, "r", encoding="UTF8")
-		all_input_data += json.load(f)
-		f.close()
+		with open(file, "r", encoding="UTF8") as f:
+			all_input_data += json.load(f)
 
 	all_rows = []
 	rows_set = set() # for de-duplication
@@ -51,7 +53,8 @@ def main():
 	file_chunks = list(chunk(all_rows, args.num)) # chunk() returns a generator, not a list
 
 	for i in range(0, len(file_chunks)):
-		with open(f"{output_file_name}-{i}.csv", "w") as output_file:
+		output_file = os.path.join(output_path, f"{OUTPUT_FILE_NAME}-{i}.csv")
+		with open(output_file, "w") as output_file:
 			writer = csv.writer(output_file)
 			writer.writerows(file_chunks[i])
 
